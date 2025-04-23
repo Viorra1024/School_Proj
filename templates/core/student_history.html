@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+  <div class="container mt-4 mb-4">
+    <h1>{{ page_title }}</h1>
+    <p><strong>Ученик:</strong> {{ student.last_name }} {{ student.first_name }}</p>
+    <hr>
+
+    {% if history_records %}
+      <p>Отображены последние изменения (самые свежие вверху).</p>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover table-sm">
+          <thead>
+            <tr>
+              <th scope="col">Дата и время</th>
+              <th scope="col">Тип</th>
+              <th scope="col">Пользователь</th>
+              {# Отобразим состояние ключевых полей на тот момент #}
+              <th scope="col">Класс</th>
+              <th scope="col">Тел. родителя</th>
+              <th scope="col">Email родителя</th>
+              {# Можно добавить другие поля ученика при необходимости #}
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in history_records %}
+              <tr>
+                {# Дата и время изменения #}
+                <td>{{ record.history_date|date:"d.m.Y H:i:s" }}</td>
+
+                {# Тип изменения (+ Создание, ~ Изменение, - Удаление) #}
+                <td>{{ record.get_history_type_display }}</td>
+
+                {# Пользователь, внесший изменение #}
+                <td>{{ record.history_user|default:"Система/Неизвестно" }}</td>
+
+                {# Состояние полей на момент записи истории #}
+                {# Обращаемся к полям прямо у объекта record #}
+                <td>{{ record.current_class.name|default:"-" }}</td>
+                <td>{{ record.parent_phone_number|default:"-" }}</td>
+                <td>{{ record.parent_email|default:"-" }}</td>
+
+              </tr>
+            {% empty %}
+              {# Этот блок не должен сработать, если есть history_records, но на всякий случай #}
+              <tr>
+                <td colspan="6">Нет записей в истории.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+        <div class="alert alert-info mt-3" role="alert">
+            История изменений для этого ученика отсутствует.
+        </div>
+    {% endif %}
+
+    <hr class="mt-4">
+    <div class="mt-3 mb-3">
+       <a href="{% url 'core:student_detail' pk=student.pk %}" class="btn btn-secondary">Назад к профилю ученика</a>
+    </div>
+
+  </div> {# Конец контейнера #}
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load schedule_tags %} {# На всякий случай, если понадобятся фильтры #}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+  <div class="container mt-4 mb-4 p-4 border"> {# Добавим рамку и отступы #}
+    <h2 class="text-center mb-4">Табель успеваемости</h2>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <p><strong>Ученик:</strong> {{ student.last_name }} {{ student.first_name }}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Класс:</strong> {{ student.current_class.name|default:"Не назначен" }}</p>
+      </div>
+    </div>
+    <p class="text-muted mb-4">Дата формирования отчета: {{ current_date|date:"d.m.Y" }}</p>
+
+    <hr>
+
+    {% if grades_by_subject %}
+      <h4>Оценки по предметам:</h4>
+      {% for subject_name, grades_list in grades_by_subject.items %}
+        <div class="subject-section mb-4">
+          <h5>{{ subject_name }}</h5>
+          {% if grades_list %}
+            <ul class="list-inline">
+              {% for grade in grades_list %}
+                <li class="list-inline-item border p-1 m-1 rounded {% if grade.grade_type == 'TST' or grade.grade_type == 'EXM' %}bg-light{% endif %}">
+                   {# Вот эту строку нужно проверить внимательно #}
+                   <strong title="{{ grade.get_grade_type_display }} от {{ grade.date_issued|date:'d.m.y' }}{% if grade.teacher %} ({{ grade.teacher.last_name }}){% endif %}">{{ grade.grade_value }}</strong>
+                   {# <small>({{ grade.get_grade_type_display }})</small> #}
+                </li>
+              {% endfor %}
+            </ul>
+            {# --- НАЧАЛО ПРОВЕРЯЕМОГО БЛОКА --- #}
+
+            {# --- КОНЕЦ ПРОВЕРЯЕМОГО БЛОКА --- #}
+          {% else %}
+             <p>Нет оценок.</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            У этого ученика пока нет оценок для формирования табеля.
+        </div>
+    {% endif %}
+
+    <hr class="mt-5">
+    <div class="row mt-5">
+        <div class="col-md-6 text-center">
+            <p>_________________________</p>
+            <p>(Подпись классного руководителя)</p>
+        </div>
+        <div class="col-md-6 text-center">
+            <p>_________________________</p>
+            <p>(Подпись директора)</p>
+            <p>М.П.</p>
+        </div>
+    </div>
+
+  </div> {# Конец контейнера с рамкой #}
+
+  <div class="mt-3 mb-3 text-center"> {# Кнопки под рамкой #}
+    <a href="{% url 'core:student_grades' pk=student.pk %}" class="btn btn-secondary">Назад к оценкам</a>
+     {# Можно добавить кнопку печати #}
+     <button onclick="window.print();" class="btn btn-primary">Печать</button>
+  </div>
+
+{% endblock %}

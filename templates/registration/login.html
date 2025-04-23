@@ -1,0 +1,40 @@
+{# templates/registration/login.html #}
+{% extends "base.html" %}
+
+{% block title %}Вход в систему{% endblock %}
+
+{% block content %}
+  <h1>Вход в систему</h1>
+  <hr>
+
+  {% if form.errors %}
+    <div class="alert alert-danger">
+      Ваше имя пользователя и пароль не совпадают. Пожалуйста, попробуйте еще раз.
+    </div>
+  {% endif %}
+
+  {% if next %}
+    {% if user.is_authenticated %}
+      <div class="alert alert-warning">
+          Ваша учетная запись не имеет доступа к этой странице. Чтобы продолжить,
+          войдите в систему с учетной записью, имеющей доступ.
+      </div>
+    {% else %}
+       <div class="alert alert-info">
+           Пожалуйста, войдите, чтобы увидеть эту страницу.
+       </div>
+    {% endif %}
+  {% endif %}
+
+  <form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    {{ form.as_p }} {# Django автоматически передаст сюда форму логина #}
+    <button type="submit" class="btn btn-primary">Войти</button>
+    {# Скрытый параметр, указывающий, куда перенаправить пользователя после входа #}
+    <input type="hidden" name="next" value="{{ next }}">
+  </form>
+
+  {# Ссылки на сброс пароля (пока не настроены, но можно добавить) #}
+  {# <p><a href="{% url 'password_reset' %}">Забыли пароль?</a></p> #}
+
+{% endblock %}

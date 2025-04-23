@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+  <h1>{{ page_title }}</h1>
+  <hr>
+  <p>Вы уверены, что хотите безвозвратно удалить ученика <strong>{{ student.last_name }} {{ student.first_name }}</strong> (Класс: {{ student.current_class.name|default:"Не назначен" }})?</p>
+
+  <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Да, удалить</button>
+      <a href="{% url 'core:student_detail' pk=student.pk %}" class="btn btn-secondary">Отмена</a>
+  </form>
+{% endblock %}

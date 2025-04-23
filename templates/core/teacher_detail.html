@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<h1>{{ teacher.last_name }} {{ teacher.first_name }}</h1>
+<hr>
+
+ <div class="row">
+    <div class="col-md-4">
+        {% if teacher.photo %}
+            <img src="{{ teacher.photo.url }}" alt="Фото {{ teacher.last_name }}" class="img-fluid rounded mb-3">
+        {% else %}
+             <img src="{% static 'images/placeholder_teacher.png' %}" alt="Нет фото" class="img-fluid rounded mb-3">
+             {% endif %}
+    </div>
+    <div class="col-md-8">
+        <h4>Контактная информация</h4>
+        <p><strong>Email:</strong> {{ teacher.email|default:"Не указан" }}</p>
+        <p><strong>Телефон:</strong> {{ teacher.phone_number|default:"Не указан" }}</p>
+        <hr>
+        <h4>Преподаваемые предметы</h4>
+        <ul>
+            {% for subject in teacher.subjects.all %}
+                <li>{{ subject.name }}</li>
+            {% empty %}
+                <li>Предметы не указаны</li>
+            {% endfor %}
+        </ul>
+         {% if teacher.managed_classes.all %}
+         <hr>
+         <h4>Классное руководство</h4>
+          <ul>
+            {% for class_obj in teacher.managed_classes.all %}
+                <li>{{ class_obj.name }}</li>
+            {% endfor %}
+          </ul>
+         {% endif %}
+    </div>
+</div>
+
+
+<hr>
+<a href="{% url 'core:teacher_update' pk=teacher.pk %}" class="btn btn-warning">Редактировать</a> <a href="{% url 'core:teacher_delete' pk=teacher.pk %}" class="btn btn-danger">Удалить</a> <a href="{% url 'core:teacher_list' %}" class="btn btn-secondary">Назад к списку</a>
+
+{% endblock %}

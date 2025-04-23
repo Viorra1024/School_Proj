@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load schedule_tags %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+
+<h1>Расписание класса: {{ class_obj.name }}</h1>
+{% if class_obj.class_teacher %}
+    <p>Классный руководитель: {{ class_obj.class_teacher }}</p>
+{% endif %}
+<hr>
+
+{% if schedule_by_day %}
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped text-center">
+      <thead>
+        <tr>
+          <th>День недели</th>
+          <th>Время</th>
+          <th>Предмет</th>
+          <th>Учитель</th>
+          <th>Аудитория</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for day_code, day_name in days %} {# Итерируем по всем дням недели #}
+          {% with lessons_for_day=schedule_by_day|get_item:day_code %} {# Получаем уроки для текущего дня #}
+            {% if lessons_for_day %}
+              {% for lesson in lessons_for_day %}
+                <tr>
+                  {% if forloop.first %} {# Отображаем название дня только для первого урока этого дня #}
+                    <td rowspan="{{ lessons_for_day|length }}">{{ day_name }}</td>
+                  {% endif %}
+                  <td>{{ lesson.start_time|time:"H:i" }} - {{ lesson.end_time|time:"H:i" }}</td>
+                  <td>{{ lesson.subject.name }}</td>
+                  <td>{{ lesson.teacher }}</td>
+                  <td>{{ lesson.auditory.name|default:"N/A" }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+             {# Если в этот день нет уроков - можно вывести пустую строку или сообщение #}
+             {#
+              <tr>
+                <td>{{ day_name }}</td>
+                <td colspan="4">Уроков нет</td>
+              </tr>
+             #}
+            {% endif %}
+          {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p>Для этого класса расписание еще не составлено.</p>
+{% endif %}
+
+<hr>
+{# Можно добавить ссылку назад к списку классов, если он будет #}
+{# <a href="#" class="btn btn-secondary">Назад к классам</a> #}
+
+{% endblock %}
+
+{# Добавляем кастомный фильтр для доступа к словарю по ключу-переменной #}
+{% block extra_scripts %}
+<script>
+    // Это небольшой хак, чтобы использовать фильтр get_item в шаблоне Django,
+    // так как прямой доступ по ключу-переменной schedule_by_day[day_code] не работает.
+    // Вместо этого можно было бы переделать структуру данных в view.
+    // Но для простоты пока добавим этот "фильтр" через JS, хотя это не совсем Django-way.
+    // Лучше было бы зарегистрировать кастомный тег или фильтр в Python.
+
+    // **Примечание:** Этот JS-код здесь не поможет, т.к. Django рендерит шаблон на сервере.
+    // Вместо этого, зарегистрируем простой template filter.
+</script>
+{% endblock %}
