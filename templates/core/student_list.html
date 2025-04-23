@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Список учеников{% endblock %}
+
+{% block content %}
+<h1>Список учеников</h1>
+<p>
+    <a href="{% url 'core:student_create' %}" class="btn btn-success">Добавить ученика</a>
+</p>
+<hr>
+
+{% if students %}
+  <table class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th>Фамилия</th>
+        <th>Имя</th>
+        <th>Класс</th>
+        <th>Контакты родителя</th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for student in students %}
+        <tr>
+          <td>
+            <a href="{% url 'core:student_detail' pk=student.pk %}">
+                {{ student.last_name }}
+            </a>
+          </td>
+          <td>{{ student.first_name }}</td>
+          <td>{{ student.current_class.name|default:"Не назначен" }}</td>
+          <td>{{ student.parent_phone_number|default:"-" }} / {{ student.parent_email|default:"-" }}</td>
+          </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>В базе данных пока нет учеников.</p>
+  {% endif %}
+
+{% endblock %}

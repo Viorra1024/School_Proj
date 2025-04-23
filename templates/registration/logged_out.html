@@ -1,0 +1,12 @@
+{# templates/registration/logged_out.html #}
+{% extends "base.html" %}
+
+{% block title %}Выход выполнен{% endblock %}
+
+{% block content %}
+  <h1>Выход выполнен</h1>
+  <hr>
+  <p>Вы успешно вышли из системы.</p>
+  <a href="{% url 'login' %}" class="btn btn-primary">Войти снова</a>
+  <a href="{% url 'core:index' %}" class="btn btn-secondary">На главную</a>
+{% endblock %}

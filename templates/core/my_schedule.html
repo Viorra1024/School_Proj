@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load schedule_tags %} {# Загружаем наши теги/фильтры #}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+  <h1>{{ page_title }}</h1> {# Заголовок теперь динамический из view #}
+
+  {# Выводим информацию в зависимости от роли #}
+  {% if is_student_view and student %}
+      <p><strong>Ученик:</strong> {{ student.last_name }} {{ student.first_name }}</p>
+      {% if student_class %}
+          <p><strong>Класс:</strong> {{ student_class.name }}</p>
+      {% endif %}
+  {% elif is_teacher_view and teacher %}
+      <p><strong>Учитель:</strong> {{ teacher.last_name }} {{ teacher.first_name }}</p>
+  {% endif %}
+  <hr>
+
+  {# Сообщение, если студент не привязан к классу #}
+  {% if no_class_assigned %}
+      <div class="alert alert-warning" role="alert">
+          Вы еще не привязаны к классу. Ваше персональное расписание недоступно.
+      </div>
+  {# Проверяем, есть ли уроки в расписании #}
+  {% elif schedule_by_day %}
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped text-center">
+          <thead>
+            <tr>
+              <th>День недели</th>
+              <th>Время</th>
+              <th>Предмет</th>
+              {# Колонка меняется в зависимости от роли #}
+              {% if is_teacher_view %}
+                  <th>Класс</th> {# Учитель видит класс #}
+                  <th>Действия</th> {# <<< Добавляем заголовок для действий учителя #}
+              {% else %}
+                  <th>Учитель</th> {# Ученик видит учителя #}
+              {% endif %}
+              <th>Аудитория</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for day_code, day_name in days %}
+              {% with lessons_for_day=schedule_by_day|get_item:day_code %}
+                {% if lessons_for_day %}
+                  {% for lesson in lessons_for_day %}
+                    <tr>
+                      {% if forloop.first %}
+                        <td rowspan="{{ lessons_for_day|length }}">{{ day_name }}</td>
+                      {% endif %}
+                      <td>{{ lesson.start_time|time:"H:i" }} - {{ lesson.end_time|time:"H:i" }}</td>
+                      <td>{{ lesson.subject.name }}</td>
+                      {# Отображаем либо класс, либо учителя #}
+                      {% if is_teacher_view %}
+                          <td>{{ lesson.assigned_class.name }}</td> {# Учитель видит класс #}
+                          {# --- Ячейка с действием для учителя --- #}
+                          <td>
+                              <a href="{% url 'core:mark_attendance' lesson_pk=lesson.pk %}" class="btn btn-sm btn-outline-primary">
+                                  Отметить
+                              </a>
+                              {# Примечание: URL 'core:mark_attendance' мы создадим на следующем шаге #}
+                          </td>
+                          {# --- Конец ячейки с действием --- #}
+                      {% else %}
+                          <td>{{ lesson.teacher }}</td> {# Ученик видит учителя #}
+                      {% endif %}
+                      <td>{{ lesson.auditory.name|default:"N/A" }}</td>
+                    </tr>
+                  {% endfor %}
+                {% endif %}
+              {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+  {% else %}
+      {# Если нет уроков (и не случай "нет класса") #}
+      <div class="alert alert-info" role="alert">
+         {% if is_student_view %}
+             Расписание для вашего класса ({{ student_class.name }}) еще не составлено.
+         {% elif is_teacher_view %}
+             У вас пока нет уроков в расписании.
+         {% else %}
+             Расписание недоступно.
+         {% endif %}
+      </div>
+  {% endif %}
+
+  <hr>
+  <a href="{% url 'core:index' %}" class="btn btn-secondary">На главную</a>
+
+{% endblock %}

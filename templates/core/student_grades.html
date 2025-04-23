@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load schedule_tags %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+  <h1>Оценки ученика: {{ student.last_name }} {{ student.first_name }}</h1>
+  <p>Класс: {{ student.current_class.name|default:"Не назначен" }}</p>
+  <hr>
+
+  {% if grades_by_subject %}
+    {% for subject_name, grades_list in grades_by_subject.items %}
+      <div class="mb-4"> {# Отступ между блоками предметов #}
+        <h3>{{ subject_name }}</h3>
+        {% if grades_list %}
+          <table class="table table-sm table-striped table-hover">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Тип</th>
+                <th>Оценка</th>
+                <th>Учитель</th>
+                <th>Комментарий</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for grade in grades_list %}
+                <tr>
+                  <td>{{ grade.date_issued|date:"d.m.Y" }}</td>
+                  <td>{{ grade.get_grade_type_display }}</td>
+                  <td><strong>{{ grade.grade_value }}</strong></td>
+                  <td>{{ grade.teacher|default:"-" }}</td>
+                  <td>{{ grade.comment|default:"" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          {# Этого не должно быть при текущей логике, но на всякий случай #}
+          <p>Нет оценок по этому предмету.</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+      <div class="alert alert-info" role="alert">
+          У этого ученика пока нет оценок.
+      </div>
+  {% endif %}
+
+<hr>
+    {# Кнопка добавления оценки (видна только учителям/админам) #}
+    {% if request.user.is_staff or request.user|in_group:'Teachers' %}
+        <a href="{% url 'core:grade_create' %}?student_id={{ student.pk }}" class="btn btn-success">Добавить оценку этому ученику</a>
+    {% endif %}
+
+    {# Добавляем ссылку на табель успеваемости #}
+    <a href="{% url 'core:student_grade_report' pk=student.pk %}" class="btn btn-info ms-2">Сформировать табель</a> {# Добавил ms-2 для небольшого отступа слева #}
+
+    {# Кнопка назад к профилю ученика #}
+    <a href="{% url 'core:student_detail' pk=student.pk %}" class="btn btn-secondary ms-2">Назад к профилю ученика</a>
+
+{% endblock %}
