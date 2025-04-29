@@ -4,11 +4,20 @@
 
 {% block content %}
 <h1>Список учителей</h1>
-<p>
-    <a href="{% url 'core:teacher_create' %}" class="btn btn-success">Добавить учителя</a>
-</p>
 <hr>
+<a href="{% url 'core:teacher_create' %}" class="btn btn-success">Добавить учителя</a>
+</p>
 
+{# --- Форма Поиска --- #}
+<form method="get" action="{% url 'core:teacher_list' %}" class="mb-3 mt-3">
+  <div class="input-group">
+    <input type="text" name="q" class="form-control" placeholder="Поиск по имени или фамилии..." value="{{ query|default:'' }}">
+    <button class="btn btn-outline-secondary" type="submit">Найти</button>
+  </div>
+</form>
+{# --- Конец Формы Поиска --- #}
+
+<hr>
 {% if teachers %}
   <table class="table table-striped table-hover">
     <thead>

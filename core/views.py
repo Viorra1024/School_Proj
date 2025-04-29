@@ -13,6 +13,7 @@ from django.contrib import messages # Для вывода сообщений п�
 from datetime import date
 from django.db.models import Count
 from .tasks import print_hello, add, send_grade_notification_task
+from django.db.models import Q
 
 
 # --- Функции для проверки ролей ---
@@ -33,23 +34,52 @@ def is_staff_or_teacher(user):
 @login_required
 @user_passes_test(is_staff_or_teacher)
 def student_list(request):
-    students = Student.objects.all() # Получаем всех учеников из базы данных
+    # Получаем поисковый запрос из GET параметра 'q'
+    # request.GET.get('q', '') - возвращает значение 'q' или пустую строку, если 'q' нет
+    query = request.GET.get('q', '')
+
+    # Начинаем с полного списка студентов
+    students = Student.objects.select_related('current_class').all()
+
+    # Если запрос не пустой, фильтруем
+    if query:
+        students = students.filter(
+            Q(first_name__icontains=query) | # Ищем в имени (без учета регистра) ИЛИ
+            Q(last_name__icontains=query)  |  # Ищем в фамилии (без учета регистра)
+            Q(current_class__name__icontains=query) # <<< ДОБАВЛЯЕМ: Ищем в названии класса
+        )
+        # Можно добавить поиск по классу:
+        # | Q(current_class__name__icontains=query)
+
     context = {
-        'students': students, # Передаем список учеников в шаблон
-        'page_title': 'Список Учеников', # Пример передачи доп. данных
+        'students': students,
+        'page_title': 'Список Учеников',
+        'query': query, # <<< Передаем запрос обратно в шаблон
     }
-    # Рендерим шаблон 'core/student_list.html' и передаем ему данные context
     return render(request, 'core/student_list.html', context)
+
 
 @login_required
 @user_passes_test(is_staff_or_teacher)
 def teacher_list(request):
-    teachers = Teacher.objects.prefetch_related('subjects') # Получаем всех учителей
-    # prefetch_related('subjects') оптимизирует запрос для ManyToMany поля subjects,
-    # чтобы избежать множества доп. запросов в цикле шаблона
+    query = request.GET.get('q', '') # Получаем запрос
+
+    # Начинаем с полного списка учителей с предзагрузкой предметов
+    teachers = Teacher.objects.prefetch_related('subjects').all()
+
+    # Если запрос не пустой, фильтруем
+    if query:
+        teachers = teachers.filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query)
+            # Можно добавить поиск по email или телефону, если нужно
+            # | Q(email__icontains=query)
+        )
+
     context = {
         'teachers': teachers,
         'page_title': 'Список Учителей',
+        'query': query, # <<< Передаем запрос обратно в шаблон
     }
     return render(request, 'core/teacher_list.html', context)
 
